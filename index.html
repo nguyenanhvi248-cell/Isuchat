@@ -3,182 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Isu Chat Pink Master</title>
+    <title>Isu Chat - Pink Universe</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --pink-main: #ffafbd; --pink-dark: #ff8e91; --pink-soft: #fff1f3; --text: #8b5e61; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--pink-soft); height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: var(--text); }
-        
-        /* Hiệu ứng rung màn hình khi bạo kích */
-        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 30%, 70% { transform: translate3d(-4px, 0, 0); } }
+        :root { --pink-bg: #fff1f3; --pink-main: #ffafbd; --pink-dark: #ff8e91; --text: #8b5e61; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--pink-bg); height: 100vh; overflow: hidden; color: var(--text); }
 
-        /* Chữ hiện lên khi nổ kẹo */
-        #crit-text { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0); z-index: 10000; color: #ff1493; font-size: 50px; font-weight: 900; text-shadow: 0 0 20px #fff; pointer-events: none; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        #crit-text.show { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        /* Màn hình chờ */
+        #loading-screen { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
+        .heart-loader { font-size: 50px; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* Giao diện */
-        .head { background: #fff; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--pink-main); font-weight: bold; }
-        #view { flex: 1; overflow-y: auto; padding-bottom: 85px; }
-        
-        nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #fff; display: flex; border-top: 1px solid #eee; z-index: 1000; box-shadow: 0 -2px 10px rgba(255,175,189,0.2); }
-        .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #ccb0b2; transition: 0.2s; }
+        /* Bố cục chính */
+        #app { display: none; height: 100vh; flex-direction: column; }
+        header { background: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--pink-main); font-weight: bold; }
+        #main-view { flex: 1; overflow-y: auto; padding-bottom: 90px; }
+
+        /* Bottom Nav 5 Tab */
+        nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: white; display: flex; border-top: 1px solid #eee; z-index: 1000; }
+        .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: #ccb0b2; cursor: pointer; }
         .tab.active { color: var(--pink-dark); font-weight: bold; }
-        .tab span { font-size: 22px; margin-bottom: 3px; }
+        .tab span { font-size: 20px; margin-bottom: 2px; }
 
-        /* Components Xinh Yêu */
-        .card { background: #fff; margin: 12px; padding: 15px; border-radius: 20px; display: flex; align-items: center; box-shadow: 0 4px 15px rgba(255,175,189,0.15); border: 1px solid var(--pink-soft); }
-        .btn { background: linear-gradient(45deg, var(--pink-main), var(--pink-dark)); color: #fff; border: none; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; box-shadow: 0 4px 10px rgba(255,142,145,0.3); }
-        .input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid var(--pink-main); border-radius: 10px; outline: none; background: #fff; }
-        
-        /* Modal & Chat */
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 5000; }
-        .modal-box { background: #fff; width: 85%; padding: 25px; border-radius: 25px; text-align: center; }
-        #chat-ui { position: fixed; inset: 0; background: var(--pink-soft); z-index: 2000; display: none; flex-direction: column; }
-        .msgs { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .m { padding: 12px 16px; border-radius: 18px; max-width: 80%; font-size: 14px; }
-        .m.u { background: var(--pink-dark); color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .m.b { background: #fff; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* UI Tab 1 & Tab 2 */
+        .search-icon { position: absolute; top: 15px; right: 15px; font-size: 20px; }
+        .add-btn { position: fixed; bottom: 90px; right: 20px; width: 55px; height: 55px; background: var(--pink-main); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 500; }
+        .char-item { background: white; margin: 10px; padding: 12px; border-radius: 15px; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .char-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 12px; }
+
+        /* Chat UI đặc thù */
+        #chat-ui { position: fixed; inset: 0; background: var(--pink-bg); z-index: 2000; display: none; flex-direction: column; }
+        .affinity-bar { background: white; padding: 10px; text-align: center; border-bottom: 1px solid var(--pink-main); font-size: 12px; font-weight: bold; }
+        .chat-logs { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; font-size: 14px; }
+        .msg.u { align-self: flex-end; background: var(--pink-main); color: white; }
+        .msg.b { align-self: flex-start; background: white; border: 1px solid #eee; }
+        .thought-bubble { font-style: italic; color: #888; font-size: 11px; margin-top: -5px; margin-bottom: 5px; }
+
+        /* Menu ẩn sau dấu < */
+        .side-menu { display: none; background: white; padding: 10px; border-radius: 10px; position: absolute; bottom: 65px; left: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); gap: 10px; z-index: 100; }
+
+        /* Tab 5 - Profile */
+        .checkin-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
+        .day-box { background: white; padding: 10px; border-radius: 10px; border: 1px solid #eee; font-size: 12px; }
+        .day-box.active { border-color: var(--pink-dark); background: #fff5f6; }
+
+        /* Input Styles */
+        .input-box { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; outline: none; }
+        .btn-pink { background: var(--pink-main); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; }
     </style>
 </head>
-<body id="master-body">
+<body>
 
-    <div id="crit-text">BÙM CHÍU! 🍭</div>
-    <div class="head">
-        <span style="color: var(--pink-dark)">💖 ISU PINK PRO</span>
-        <span id="candy-val">🍬 0</span>
+    <div id="loading-screen">
+        <div class="heart-loader">💖</div>
+        <p id="loading-text">Đang kết nối trái tim...</p>
     </div>
 
-    <div id="view"></div>
+    <div id="app">
+        <header>
+            <span id="tab-title">Isu Chat</span>
+            <span id="header-candy">🍬 100</span>
+            <div id="search-btn" class="search-icon">🔍</div>
+        </header>
 
-    <nav>
-        <div class="tab" onclick="go(1)"><span>🏠</span>Home</div>
-        <div class="tab" onclick="go(2)"><span>🎁</span>Nhận Kẹo</div>
-        <div class="tab" onclick="go(3)"><span>✨</span>Tạo NV</div>
-        <div class="tab" onclick="go(4)"><span>🌎</span>Global</div>
-        <div class="tab" onclick="go(5)"><span>🎀</span>Hồ Sơ</div>
-    </nav>
+        <div id="main-view"></div>
+
+        <div id="add-btn-view" class="add-btn" onclick="openCreateChar()">+</div>
+
+        <nav>
+            <div class="tab" onclick="go(1)"><span>🏘️</span>Khám phá</div>
+            <div class="tab" onclick="go(2)"><span>💬</span>Đoạn chat</div>
+            <div class="tab" onclick="go(3)"><span>📸</span>Feed</div>
+            <div class="tab" onclick="go(4)"><span>🌍</span>Social</div>
+            <div class="tab" onclick="go(5)"><span>🎀</span>Hồ sơ</div>
+        </nav>
+    </div>
 
     <div id="chat-ui">
-        <div class="head">
-            <button onclick="closeChat()" style="background:none; border:none; font-size:20px; color:var(--pink-dark)">❮ Back</button>
-            <span id="chat-title">Nàng Thơ</span>
-            <span></span>
-        </div>
-        <div class="msgs" id="chat-logs"></div>
-        <div style="padding:15px; background:#fff; border-top:1px solid var(--pink-soft)">
-            <div style="display:flex; justify-content:space-around; margin-bottom:10px; font-size:12px;">
-                <label><input type="radio" name="r" value="5" checked> 5🍬</label>
-                <label><input type="radio" name="r" value="10"> 10🍬</label>
-                <label><input type="radio" name="r" value="20"> 20🍬 (NỔ)</label>
+        <div class="affinity-bar" id="aff-bar">❤️ 0 - Bình thường</div>
+        <header>
+            <button onclick="closeChat()" style="background:none; border:none; color:var(--pink-dark); font-size:20px;">❮</button>
+            <span id="chatting-with">Nhân vật</span>
+            <div style="font-size:10px;">
+                Cost: <select id="cost-sel">
+                    <option value="5">5🍬 (Thường)</option>
+                    <option value="10">10🍬 (Ổn)</option>
+                    <option value="15">15🍬 (Pro)</option>
+                    <option value="20">20🍬 (VIP)</option>
+                </select>
             </div>
-            <div style="display:flex; gap:8px;">
-                <input id="chat-input" class="input" style="margin:0" placeholder="Nhắn gì đó thật ngọt ngào...">
-                <button onclick="sendMsg()" class="btn" style="width:70px; margin:0">GỬI</button>
+        </header>
+        <div class="chat-logs" id="chat-logs"></div>
+        <div style="padding:10px; background:white; position:relative;">
+            <div id="side-menu" class="side-menu">
+                <button onclick="showNote('Nhật kí')">📔</button>
+                <button onclick="checkPhone()">📱</button>
+                <button onclick="showNote('Bản nhạc')">🎵</button>
+                <button onclick="showNote('Ghi chú')">📝</button>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button onclick="toggleMenu()" style="background:none; border:none; font-size:20px;">❮</button>
+                <input id="chat-input" class="input-box" style="margin:0;" placeholder="Nhắn gì đó...">
+                <button onclick="sendMessage()" class="btn-pink" style="width:70px;">Gửi</button>
             </div>
         </div>
     </div>
 
-    <div id="modal" onclick="closeModal()"><div class="modal-box" id="modal-body" onclick="event.stopPropagation()"></div></div>
-
     <script>
-        let candy = parseInt(localStorage.getItem('p_candy')) || 100;
-        let profile = JSON.parse(localStorage.getItem('p_profile')) || { name: "Bé Yêu", avt: "https://i.pravatar.cc/150?u=pink" };
-        let chars = JSON.parse(localStorage.getItem('p_chars')) || [{id:1, name:"Miu Miu", img:"https://i.pravatar.cc/150?u=cat", logs:[]}];
-        let lastCheck = localStorage.getItem('p_lastCheck') || "";
-        let currChar = null; let tempImg = "";
+        // --- DATA ---
+        let db = {
+            candy: 100,
+            streak: 0,
+            adsToday: 0,
+            chars: [
+                {id: 1, name: "Yuki", avt: "https://i.pravatar.cc/150?u=1", intro: "Chào cậu, mình là Yuki!", aff: 0, logs: [], bio: "Thích tuyết và mèo.", history: "Bạn thân từ nhỏ."},
+                {id: 2, name: "Sora", avt: "https://i.pravatar.cc/150?u=2", intro: "Cậu tìm tôi có việc gì?", aff: 0, logs: [], bio: "Lạnh lùng, học giỏi.", history: "Hàng xóm."}
+            ],
+            me: { name: "Bé Yêu", avt: "https://i.pravatar.cc/150?u=me", bio: "Đang yêu đời", gender: "Nữ", personality: "Dịu dàng", relationship: "Bạn bè" }
+        };
 
-        function sync() { document.getElementById('candy-val').innerText = "🍬 " + candy; }
-        
-        // HIỆU ỨNG NỔ KẸO MÀU HỒNG
-        function triggerBoom(txt) {
-            document.getElementById('master-body').classList.add('shake');
-            setTimeout(() => document.getElementById('master-body').classList.remove('shake'), 400);
-            const cText = document.getElementById('crit-text');
-            cText.innerText = txt;
-            cText.classList.add('show');
-            setTimeout(() => cText.classList.remove('show'), 1200);
-            
-            confetti({
-                particleCount: 150, spread: 70, origin: { y: 0.6 },
-                colors: ['#ffafbd', '#ff8e91', '#ffffff', '#ff1493', '#fff1f3']
-            });
+        const affLevels = [
+            {min: 1000, max: 3000, txt: "Kết hôn 💍"}, {min: 500, max: 1000, txt: "Người yêu 👩‍❤️‍👨"},
+            {min: 100, max: 500, txt: "Tình cảm 🥰"}, {min: 50, max: 100, txt: "Thân thiết ✨"},
+            {min: 20, max: 50, txt: "Bạn bè 🤝"}, {min: 0, max: 20, txt: "Bình thường 😐"},
+            {min: -20, max: 0, txt: "Khó chịu 😒"}, {min: -50, max: -20, txt: "Bực bội 😠"},
+            {min: -100, max: -50, txt: "Tức giận 😡"}, {min: -500, max: -100, txt: "Ghét 🤮"},
+            {min: -1000, max: -500, txt: "Nổi điên 🌋"}, {min: -3000, max: -1000, txt: "Bùng nổ 💣"}
+        ];
+
+        // --- CORE LOGIC ---
+        window.onload = () => {
+            const loadingTexts = ["Tải dữ liệu xinh đẹp...", "Đang chuẩn bị kẹo ngọt...", "Lập trình cảm xúc..."];
+            let i = 0;
+            const timer = setInterval(() => {
+                document.getElementById('loading-text').innerText = loadingTexts[i++ % 3];
+            }, 1000);
+
+            setTimeout(() => {
+                clearInterval(timer);
+                document.getElementById('loading-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    document.getElementById('app').style.display = 'flex';
+                    go(1);
+                    boom(); // Kẹo nổ khi vào tab 1
+                }, 500);
+            }, 3000);
+        };
+
+        function boom() {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ffafbd', '#ff8e91', '#ffffff'] });
         }
 
         function go(n) {
-            const v = document.getElementById('view'); sync();
+            const v = document.getElementById('main-view');
+            const addBtn = document.getElementById('add-btn-view');
             document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i+1) === n));
+            addBtn.style.display = (n === 1) ? 'flex' : 'none';
 
-            if(n===1) v.innerHTML = `<div style="padding:10px">` + chars.map(c => `
-                <div class="card" onclick="openChat(${c.id})">
-                    <img src="${c.img}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--pink-main)">
-                    <div style="margin-left:15px"><b>${c.name}</b><br><small style="color:#aaa">Nhấn để chat nè~</small></div>
-                </div>`).join('') + `</div>`;
-            
-            if(n===2) {
-                let can = lastCheck !== new Date().toDateString();
-                v.innerHTML = `<div style="text-align:center;padding:50px">
-                    <span style="font-size:80px">🍭</span>
-                    <h3>Quà tặng mỗi ngày</h3>
-                    <button class="btn" ${can?'':'disabled'} onclick="doCheckin()">${can?'NHẬN 20 KẸO HỒNG':'MAI QUAY LẠI NHA'}</button>
+            if(n === 1) {
+                v.innerHTML = `<div style="padding:15px"><h3>Khám phá nhân vật</h3>` + 
+                    db.chars.map(c => `<div class="char-item" onclick="openChat(${c.id})"><img src="${c.avt}"><b>${c.name}</b></div>`).join('') + `</div>`;
+            }
+            if(n === 2) {
+                v.innerHTML = `<div style="padding:15px"><h3>Đoạn chat</h3>` + 
+                    db.chars.filter(c => c.logs.length > 0).map(c => `<div class="char-item" onclick="openChat(${c.id})"><img src="${c.avt}"><b>${c.name}</b></div>`).join('') + `</div>`;
+            }
+            if(n === 5) {
+                v.innerHTML = `<div style="padding:20px; text-align:center">
+                    <img src="${db.me.avt}" style="width:100px; height:100px; border-radius:50%; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.1)">
+                    <h2>${db.me.name}</h2>
+                    <p>${db.me.bio}</p>
+                    <button class="btn-pink" onclick="editMe()">Chỉnh sửa hồ sơ</button>
+                    <hr>
+                    <h4>Điểm danh nhận kẹo</h4>
+                    <div class="checkin-grid">${[1,2,3,4,5,6,7].map(d => `<div class="day-box ${db.streak >= d ? 'active' : ''}">Ngày ${d}<br>${d==7?'100🍬':'20🍬'}</div>`).join('')}</div>
+                    <button class="btn-pink" onclick="doCheckin()">Điểm danh</button>
+                    <hr>
+                    <h4>Xem quảng cáo (15s)</h4>
+                    <p>Đã xem: ${db.adsToday}/50</p>
+                    <button class="btn-pink" style="background:#8b5e61" onclick="watchAd()">Xem quảng cáo nhận 5🍬</button>
+                    <hr>
+                    <h4>Nạp kẹo</h4>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                        <button onclick="recharge(100)">20k VND - 100🍬</button>
+                        <button onclick="recharge(500)">50k VND - 500🍬</button>
+                        <button onclick="recharge(1000)">100k VND - 1000🍬</button>
+                        <button onclick="recharge(2000)">200k VND - 2000🍬</button>
+                    </div>
                 </div>`;
             }
-
-            if(n===3) v.innerHTML = `<div style="padding:25px">
-                <h3 style="text-align:center">✨ Tạo Nhân Vật Mới ✨</h3>
-                <input id="c-name" class="input" placeholder="Tên nhân vật...">
-                <div style="text-align:center">Ảnh đại diện:<br><input type="file" onchange="readImg(this)" class="input"></div>
-                <button class="btn" onclick="saveChar()">LƯU VÀO DANH SÁCH</button>
-            </div>`;
-
-            if(n===4) v.innerHTML = `<div style="text-align:center;padding:100px;color:#ccb0b2">🌎 Đang tìm kiếm anh em...</div>`;
-
-            if(n===5) v.innerHTML = `<div style="text-align:center;padding:40px">
-                <img src="${profile.avt}" style="width:120px;height:120px;border-radius:50%;border:4px solid #fff;box-shadow:0 5px 15px rgba(0,0,0,0.1)">
-                <h2>${profile.name}</h2>
-                <div style="display:flex;gap:10px">
-                    <button class="btn" style="background:#fff;color:var(--text)" onclick="editProfile()">SỬA HỒ SƠ</button>
-                    <button class="btn" onclick="showQR()">NẠP THÊM 🍬</button>
-                </div>
-            </div>`;
         }
 
-        // LOGIC CHAT & NỔ KẸO
-        function openChat(id) { currChar = chars.find(x=>x.id===id); document.getElementById('chat-ui').style.display='flex'; document.getElementById('chat-title').innerText=currChar.name; renderMsgs(); }
-        function sendMsg() {
-            let inp = document.getElementById('chat-input'), r = parseInt(document.querySelector('input[name="r"]:checked').value);
-            if(!inp.value || candy < r) return alert("Hết kẹo rồi bé ơi!");
+        // --- CHAT LOGIC ---
+        let curChar = null;
+        function openChat(id) {
+            curChar = db.chars.find(x => x.id === id);
+            document.getElementById('chat-ui').style.display = 'flex';
+            document.getElementById('chatting-with').innerText = curChar.name;
+            updateAffinity();
+            renderMsgs();
+        }
+
+        function closeChat() { document.getElementById('chat-ui').style.display = 'none'; }
+
+        function toggleMenu() {
+            const m = document.getElementById('side-menu');
+            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const cost = parseInt(document.getElementById('cost-sel').value);
+            if(!input.value || db.candy < cost) { alert("Không đủ kẹo!"); return; }
             
-            candy -= r; sync();
-            if(r === 20) triggerBoom("SIÊU NGỌT NGÀO! 💖");
+            db.candy -= cost;
+            document.getElementById('header-candy').innerText = "🍬 " + db.candy;
             
-            currChar.logs.push({role:'u', text:inp.value}); renderMsgs();
-            inp.value = "";
+            // Random tim (1-5)
+            const plus = Math.floor(Math.random() * 5) + 1;
+            curChar.aff += plus;
+            
+            curChar.logs.push({r: 'u', t: input.value});
+            input.value = "";
+            renderMsgs();
+            updateAffinity();
+
             setTimeout(() => {
-                currChar.logs.push({role:'b', text: r === 20 ? "Anh làm em ngại quá đi... yêu sếp! 🥰" : "Em nghe nè~"});
-                renderMsgs(); localStorage.setItem('p_chars', JSON.stringify(chars));
+                let botMsg = "Mình nghe cậu nè!";
+                if(cost >= 15) botMsg = "Lời của cậu làm mình suy nghĩ rất nhiều, thực sự cảm ơn cậu vì đã luôn ở bên cạnh mình như thế này...";
+                curChar.logs.push({r: 'b', t: botMsg});
+                if(plus >= 5) {
+                    curChar.logs.push({r: 's', t: "Nhân vật đang nghĩ: Cậu ấy thật ấm áp..."});
+                }
+                renderMsgs();
             }, 1000);
         }
-        function renderMsgs() { document.getElementById('chat-logs').innerHTML = currChar.logs.map(m=>`<div class="m ${m.role==='u'?'u':'b'}">${m.text}</div>`).join(''); document.getElementById('chat-logs').scrollTop=9999; }
-        function closeChat() { document.getElementById('chat-ui').style.display='none'; }
 
-        // CÁC TÍNH NĂNG KHÁC
-        function doCheckin() { candy += 20; lastCheck = new Date().toDateString(); localStorage.setItem('p_candy', candy); localStorage.setItem('p_lastCheck', lastCheck); triggerBoom("+20 🍬 FREE"); go(2); }
-        function readImg(i) { if(i.files[0]) { let r=new FileReader(); r.onload=(e)=>tempImg=e.target.result; r.readAsDataURL(i.files[0]); } }
-        function saveChar() { let n=document.getElementById('c-name').value; if(!n||!tempImg)return; chars.push({id:Date.now(),name:n,img:tempImg,logs:[]}); localStorage.setItem('p_chars',JSON.stringify(chars)); triggerBoom("XONG RỒI! ✨"); go(1); }
-        function editProfile() {
-            document.getElementById('modal').style.display='flex';
-            document.getElementById('modal-body').innerHTML = `<h3>Sửa Hồ Sơ</h3><input id="p-name" class="input" value="${profile.name}"><br>Thay ảnh:<input type="file" onchange="readImg(this)" class="input"><button class="btn" onclick="saveP()">LƯU LẠI</button>`;
+        function updateAffinity() {
+            const level = affLevels.find(l => curChar.aff >= l.min && curChar.aff < l.max) || {txt: "Bình thường"};
+            document.getElementById('aff-bar').innerText = `❤️ ${curChar.aff} - ${level.txt}`;
         }
-        function saveP() { profile.name=document.getElementById('p-name').value; if(tempImg)profile.avt=tempImg; localStorage.setItem('p_profile',JSON.stringify(profile)); closeModal(); go(5); }
-        function showQR() {
-            document.getElementById('modal').style.display='flex';
-            document.getElementById('modal-body').innerHTML = `<h3>Quét Mã Nạp Kẹo</h3><img src="https://img.vietqr.io/image/MB-0987654321-compact2.png?amount=50000&addInfo=KEO%20HONG" style="width:100%;border-radius:15px"><button class="btn" onclick="closeModal()">ĐÃ CHUYỂN KHOẢN</button>`;
-        }
-        function closeModal() { document.getElementById('modal').style.display='none'; tempImg=""; }
 
-        go(1);
+        function renderMsgs() {
+            const box = document.getElementById('chat-logs');
+            box.innerHTML = curChar.logs.map(l => {
+                if(l.r === 's') return `<div class="thought-bubble">${l.t}</div>`;
+                return `<div class="msg ${l.r==='u'?'u':'b'}">${l.t}</div>`;
+            }).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // --- FEATURE ACTIONS ---
+        function checkPhone() {
+            if(db.candy < 50) { alert("Thiếu 50 kẹo!"); return; }
+            db.candy -= 50;
+            document.getElementById('header-candy').innerText = "🍬 " + db.candy;
+            alert(`📱 Đang xem điện thoại của ${curChar.name}...\n- Tin nhắn với mẹ: "Con nhớ ăn cơm nhé"\n- Bài đăng: "Hôm nay trời đẹp thật"`);
+        }
+
+        function doCheckin() {
+            db.streak++;
+            let plus = (db.streak === 7) ? 100 : 20;
+            db.candy += plus;
+            document.getElementById('header-candy').innerText = "🍬 " + db.candy;
+            boom();
+            go(5);
+        }
+
+        function watchAd() {
+            if(db.adsToday >= 50) return;
+            alert("Đang xem quảng cáo 15 giây...");
+            setTimeout(() => {
+                db.adsToday++;
+                db.candy += 5;
+                document.getElementById('header-candy').innerText = "🍬 " + db.candy;
+                boom();
+                go(5);
+            }, 2000); // Giả lập 2s cho nhanh sếp ạ
+        }
+
+        function recharge(val) {
+            alert(`Thanh toán thành công! Bạn nhận được ${val} kẹo.`);
+            db.candy += val;
+            document.getElementById('header-candy').innerText = "🍬 " + db.candy;
+            // Hiệu ứng lấp lánh
+            confetti({ particleCount: 100, spread: 100, colors: ['#FFD700', '#FFF'] });
+            go(5);
+        }
+
+        function openCreateChar() {
+            alert("Màn hình nhập: Tên, Ảnh, Giới tính, Xu hướng tính dục, Thông tin công khai, Tính cách, Lịch sử, Hashtag, Lời đầu tiên, Miêu tả...");
+        }
     </script>
 </body>
 </html>
