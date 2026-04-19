@@ -203,7 +203,17 @@
                     characters.map(c => `<div class="post"><strong>${c.name}</strong><p>${c.name} đã đăng một ảnh mới!</p><img src="${c.img}" class="post-img"><div style="color:var(--dark); margin-top:10px;">❤️ 1,245 likes</div></div>`).join('') + `</div>`;
             } else if(n === 4) {
                 v.innerHTML = `<div class="empty-state" style="text-align:center; padding-top:100px; color:#bbb;"><h3>Đang kết nối...</h3><p>Tính năng kết nối người dùng đang được đồng bộ.</p></div>`;
-            } else if(n === 5) {
+            } else if(n === 5) v.innerHTML = `
+    <div style="text-align:center; padding:30px; background:white;">
+        <img src="${profile.avt}" class="avt" style="width:90px; height:90px; border-radius:50%;">
+        <h2>${profile.name}</h2>
+        <div style="font-size:24px; font-weight:bold; color:var(--p-dark);">${candy} 🍬</div>
+        
+        <button class="btn-full" style="width:60%; margin:10px auto;" onclick="openEditProfile()">CHỈNH SỬA HỒ SƠ</button>
+    </div>
+    ... (phần điểm danh giữ nguyên) ...
+`;
+
                 renderProfile();
             }
         }
@@ -377,6 +387,34 @@
         }
 
     </script>
+    function openEditProfile() {
+    const m = document.getElementById('modal'); // Hoặc modal-sys tùy bản code
+    m.style.display = 'flex';
+    document.getElementById('modal-content').innerHTML = `
+        <h3>Chỉnh sửa hồ sơ</h3>
+        <input id="ed-n" placeholder="Tên của bạn" value="${profile.name}">
+        <input id="ed-a" placeholder="Link ảnh đại diện" value="${profile.avt}">
+        <input id="ed-g" placeholder="Giới tính" value="${profile.gender}">
+        <input id="ed-p" placeholder="Tính cách của bạn" value="${profile.personality}">
+        <textarea id="ed-b" placeholder="Tiểu sử cá nhân">${profile.bio}</textarea>
+        <button class="btn-full" onclick="saveProfile()">LƯU THÔNG TIN ✨</button>
+        <button onclick="closeModal()" style="width:100%; border:none; color:#999; margin-top:10px;">Hủy bỏ</button>
+    `;
+}
+
+function saveProfile() {
+    profile.name = document.getElementById('ed-n').value;
+    profile.avt = document.getElementById('ed-a').value;
+    profile.gender = document.getElementById('ed-g').value;
+    profile.personality = document.getElementById('ed-p').value;
+    profile.bio = document.getElementById('ed-b').value;
+    
+    localStorage.setItem('isu_profile', JSON.stringify(profile));
+    document.getElementById('modal').style.display = 'none'; 
+    confetti(); 
+    go(5); // Load lại trang profile
+}
+
 </body>
 </html>
 
