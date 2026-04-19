@@ -3,232 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Isu Chat - Siêu App Kẹo Hồng</title>
+    <title>Isu Chat Super Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --pink-bg: #fff0f5;
-            --pink-main: #ffb6c1;
-            --pink-dark: #ff69b4;
+            --bg: #fff5f7;
+            --main: #ffb6c1;
+            --dark: #ff69b4;
             --white: #ffffff;
+            --gray: #f0f0f0;
         }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: #444; overflow: hidden; }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--pink-bg); color: #444; overflow: hidden; }
-
-        /* MÀN HÌNH CHỜ */
-        #splash-screen {
-            position: fixed; inset: 0; background: var(--pink-main);
+        /* MÀN HÌNH CHỜ 3S */
+        #splash {
+            position: fixed; inset: 0; background: var(--main);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 9999; transition: opacity 0.5s;
+            z-index: 9999; color: white; transition: 0.5s;
         }
-        .heart-load { font-size: 60px; animation: beat 0.8s infinite; }
-        @keyframes beat { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .heart-anim { font-size: 60px; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* LAYOUT CHÍNH */
-        #app-container { display: none; height: 100vh; flex-direction: column; }
-        #content { flex: 1; overflow-y: auto; padding-bottom: 70px; }
+        /* LAYOUT */
+        #app { display: none; height: 100vh; flex-direction: column; }
+        #main-view { flex: 1; overflow-y: auto; padding-bottom: 70px; position: relative; }
 
-        /* MENU 5 TAB */
+        /* THANH ĐIỀU HƯỚNG 5 TAB */
         #nav-bar {
             position: fixed; bottom: 0; width: 100%; height: 65px;
-            background: var(--white); display: flex; border-top: 2px solid var(--pink-main);
-            z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            background: var(--white); display: flex; border-top: 1px solid var(--main);
+            z-index: 1000;
         }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #a0a0a0; transition: 0.3s; }
-        .nav-item.active { color: var(--pink-dark); font-weight: bold; }
-        .nav-item i { font-size: 22px; margin-bottom: 2px; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: #999; }
+        .nav-item.active { color: var(--dark); font-weight: bold; }
+        .nav-item i { font-size: 22px; margin-bottom: 3px; }
 
         /* HEADER */
-        .header { background: var(--pink-main); padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .search-btn { font-size: 20px; }
+        .header { background: var(--main); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; position: sticky; top: 0; z-index: 100; }
 
         /* TAB 1: KHÁM PHÁ */
-        .char-card { background: white; margin: 12px; border-radius: 15px; padding: 12px; display: flex; align-items: center; box-shadow: 0 4px 15px rgba(255,182,193,0.3); }
-        .char-avatar { width: 65px; height: 65px; border-radius: 50%; object-fit: cover; border: 2px solid var(--pink-main); }
-        .add-char-btn { position: fixed; bottom: 85px; right: 20px; width: 55px; height: 55px; background: var(--pink-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .char-card { background: var(--white); margin: 12px; border-radius: 20px; padding: 12px; display: flex; align-items: center; box-shadow: 0 5px 15px rgba(255,182,193,0.3); }
+        .char-img { width: 60px; height: 60px; border-radius: 18px; object-fit: cover; margin-right: 15px; background: #eee; }
+        .btn-add { position: fixed; bottom: 85px; right: 20px; width: 55px; height: 55px; background: var(--dark); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
 
-        /* TAB 2: GIAO DIỆN CHAT */
-        #chat-ui { position: fixed; inset: 0; background: white; z-index: 2000; display: none; flex-direction: column; }
-        .affection-header { background: #fff5f7; padding: 8px; text-align: center; border-bottom: 1px solid var(--pink-main); font-size: 12px; color: var(--pink-dark); font-weight: bold; }
-        .chat-box { flex: 1; overflow-y: auto; padding: 15px; background: #fffafb; display: flex; flex-direction: column; }
-        .msg { margin-bottom: 12px; padding: 10px 15px; border-radius: 18px; max-width: 80%; line-height: 1.4; position: relative; }
-        .msg-bot { background: var(--pink-main); align-self: flex-start; border-bottom-left-radius: 2px; }
-        .msg-user { background: #eee; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .thought { background: rgba(255,182,193,0.2); border-radius: 10px; padding: 5px 10px; font-size: 11px; font-style: italic; margin-top: 5px; color: #888; }
-        .chat-input-area { padding: 10px; display: flex; align-items: center; border-top: 1px solid #eee; background: white; }
-        .extra-btn { width: 40px; height: 40px; background: none; border: none; font-size: 20px; color: var(--pink-dark); }
-        .input-box { flex: 1; border: 1px solid #ddd; border-radius: 20px; padding: 8px 15px; margin: 0 8px; outline: none; }
+        /* TAB 2: KHÔNG GIAN CHAT */
+        #chat-screen { position: fixed; inset: 0; background: white; z-index: 2000; display: none; flex-direction: column; }
+        .aff-bar { background: #fff0f3; padding: 5px; text-align: center; font-size: 12px; color: var(--dark); font-weight: bold; border-bottom: 1px solid var(--main); }
+        .msg-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #fffafb; }
+        .msg { padding: 10px 15px; border-radius: 18px; max-width: 75%; font-size: 14px; line-height: 1.5; }
+        .msg.bot { background: var(--main); align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg.user { background: #eee; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .thought-bubble { font-size: 11px; color: #888; font-style: italic; background: rgba(255,182,193,0.2); padding: 5px 10px; border-radius: 10px; margin-top: 5px; }
+        
+        /* BÀN PHÍM & MENU PHỤ */
+        .input-bar { padding: 10px; display: flex; align-items: center; background: white; border-top: 1px solid #eee; }
+        .input-bar input { flex: 1; border: 1px solid #ddd; border-radius: 20px; padding: 10px 15px; margin: 0 10px; }
+        .extra-panel { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; background: white; border-top: 1px solid #eee; }
+        .extra-panel button { background: var(--bg); border: 1px solid var(--main); padding: 10px; border-radius: 12px; font-size: 12px; color: var(--dark); }
 
-        /* TAB 5: HỒ SƠ & NHIỆM VỤ */
-        .profile-box { text-align: center; padding: 30px 20px; background: white; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
-        .candy-stats { display: flex; justify-content: space-around; margin-top: 20px; }
-        .mission-item { background: white; margin: 10px; padding: 15px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-claim { background: var(--pink-dark); color: white; border: none; padding: 5px 15px; border-radius: 15px; font-size: 12px; }
+        /* TAB 5: HỒ SƠ & ĐIỂM DANH */
+        .profile-card { background: white; text-align: center; padding: 30px 20px; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; }
+        .candy-box { display: inline-block; background: var(--bg); padding: 5px 15px; border-radius: 20px; color: var(--dark); font-weight: bold; margin: 10px 0; }
+        .mission-box { padding: 20px; }
+        .mission-card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-claim { background: var(--dark); color: white; border: none; padding: 8px 15px; border-radius: 15px; font-size: 12px; }
 
-        /* MODAL */
+        /* HIỆU ỨNG LẤP LÁNH KHI NẠP TIỀN */
+        .sparkle { animation: sparkleAnim 0.5s infinite; }
+        @keyframes sparkleAnim { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* MODAL TẠO NHÂN VẬT */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; display: none; align-items: center; justify-content: center; }
-        .modal-body { background: white; width: 90%; max-height: 80%; border-radius: 20px; padding: 20px; overflow-y: auto; }
-        input, textarea, select { width: 100%; margin: 8px 0; padding: 12px; border: 1px solid #ffdae0; border-radius: 10px; background: #fff9fa; }
+        .modal-content { background: white; width: 90%; max-height: 85%; border-radius: 25px; padding: 25px; overflow-y: auto; }
+        .modal-content input, .modal-content textarea { width: 100%; margin: 8px 0; padding: 12px; border: 1px solid #ffe0e5; border-radius: 12px; background: #fff9fa; }
     </style>
 </head>
 <body>
 
-    <div id="splash-screen">
-        <div class="heart-load">💖</div>
-        <h2 style="color: white; margin-top: 10px;">Isu Chat</h2>
-        <p style="color: white; font-style: italic;">Hệ thống kiểm tra sự đáng yêu...</p>
+    <div id="splash">
+        <div class="heart-anim">💖</div>
+        <h2 style="margin: 10px 0 5px 0;">Isu Chat</h2>
+        <p id="splash-msg">Hệ thống đang kiểm tra...</p>
     </div>
 
-    <div id="app-container">
-        <div class="header" id="app-header">
-            <span style="font-size: 20px; font-weight: bold;">Isu Chat</span>
-            <span class="search-btn">🔍</span>
+    <div id="app">
+        <div class="header">
+            <span>Isu Chat ✨</span>
+            <span style="font-size: 20px;">🔍</span>
         </div>
 
-        <div id="content"></div>
+        <div id="main-view"></div>
 
         <div id="nav-bar">
-            <div class="nav-item active" onclick="switchTab(1)"><i>🏠</i><span>Khám phá</span></div>
-            <div class="nav-item" onclick="switchTab(2)"><i>💬</i><span>Đoạn chat</span></div>
-            <div class="nav-item" onclick="switchTab(3)"><i>📱</i><span>Bảng tin</span></div>
-            <div class="nav-item" onclick="switchTab(4)"><i>👥</i><span>Cộng đồng</span></div>
-            <div class="nav-item" onclick="switchTab(5)"><i>👤</i><span>Hồ sơ</span></div>
+            <div class="nav-item active" onclick="changeTab(1)"><i>🏠</i><span>Khám phá</span></div>
+            <div class="nav-item" onclick="changeTab(2)"><i>💬</i><span>Đoạn chat</span></div>
+            <div class="nav-item" onclick="changeTab(3)"><i>📱</i><span>Bảng tin</span></div>
+            <div class="nav-item" onclick="changeTab(4)"><i>👥</i><span>Cộng đồng</span></div>
+            <div class="nav-item" onclick="changeTab(5)"><i>👤</i><span>Hồ sơ</span></div>
         </div>
     </div>
 
-    <div id="chat-ui">
-        <div class="affection-header" id="aff-txt">Thiện cảm: 0 (Bình thường)</div>
-        <div class="header" style="background: var(--pink-dark);">
-            <button onclick="closeChat()" style="background:none; border:none; color:white; font-size:22px;">❮</button>
-            <span id="target-name">Nhân vật</span>
-            <select id="chat-level" style="width:auto; padding:2px; font-size:10px; margin:0;">
+    <div id="chat-screen">
+        <div class="aff-bar" id="aff-label">Thiện cảm: 0 (Bình thường)</div>
+        <div class="header" style="background: var(--dark);">
+            <button onclick="exitChat()" style="background:none; border:none; color:white; font-size:20px;">❮</button>
+            <span id="chat-name">Nhân vật</span>
+            <select id="candy-tier" style="width:auto; font-size:10px; margin:0; border-radius:10px;">
                 <option value="5">Thường (5🍬)</option>
                 <option value="10">Khá (10🍬)</option>
                 <option value="15">Pro (15🍬)</option>
                 <option value="20">VIP (20🍬)</option>
             </select>
         </div>
-        <div class="chat-box" id="msg-logs"></div>
-        <div id="thought-space" style="padding: 0 15px;"></div>
-        <div class="chat-input-area">
-            <button class="extra-btn" onclick="alert('Tính năng Nhật ký, Điện thoại, Suy nghĩ đang load...')">❮</button>
-            <input type="text" id="user-msg" class="input-box" placeholder="Nhập lời nhắn...">
-            <button onclick="send()" style="border:none; background:none; color:var(--pink-dark); font-weight:bold;">GỬI</button>
+        <div class="msg-area" id="msg-logs"></div>
+        <div id="thought-area" style="padding: 0 15px;"></div>
+        <div class="input-bar">
+            <button onclick="toggleExtra()" style="background:none; border:none; font-size:20px; color:var(--dark); font-weight:bold;">&lt;</button>
+            <input type="text" id="chat-input" placeholder="Nhắn gì đó ngọt ngào...">
+            <button onclick="doSend()" style="border:none; background:none; color:var(--dark); font-weight:bold;">GỬI</button>
+        </div>
+        <div class="extra-panel" id="extra-menu">
+            <button onclick="viewExtra('Nhật ký')">Nhật ký</button>
+            <button onclick="viewPhone()">Điện thoại (50🍬)</button>
+            <button onclick="viewExtra('Suy nghĩ')">Suy nghĩ</button>
+            <button onclick="viewExtra('Bản nhạc')">Bản nhạc</button>
+            <button onclick="viewExtra('Ghi chú')">Ghi chú</button>
+        </div>
+    </div>
+
+    <div id="add-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="color:var(--dark); text-align:center;">Tạo nhân vật mới</h3>
+            <input type="text" id="in-name" placeholder="Tên nhân vật">
+            <input type="text" id="in-img" placeholder="Link ảnh đại diện (URL)">
+            <select id="in-gender"><option>Nữ</option><option>Nam</option><option>Khác</option></select>
+            <input type="text" id="in-sex" placeholder="Xu hướng tính dục">
+            <textarea id="in-bio" placeholder="Tính cách & Lịch sử nhân vật"></textarea>
+            <input type="text" id="in-first" placeholder="Lời nói đầu tiên">
+            <input type="text" id="in-desc" placeholder="Một câu miêu tả ngắn">
+            <button onclick="saveNewChar()" style="width:100%; background:var(--dark); color:white; border:none; padding:15px; border-radius:15px; font-weight:bold; margin-top:10px;">TẠO NHÂN VẬT ✨</button>
+            <button onclick="closeModal()" style="width:100%; background:none; border:none; color:#aaa; margin-top:10px;">Hủy bỏ</button>
         </div>
     </div>
 
     <script>
-        let kẹo = 500;
-        let characters = [
-            { id: 1, name: "Isu-chan", intro: "Chào mừng bạn đến với thế giới kẹo hồng!", hearts: 0, img: "https://i.pinimg.com/736x/8a/d3/a9/8ad3a98ad3c3062093554b7348984920b77b.jpg" }
+        let myCandy = 500;
+        let adCount = 0;
+        let charList = [
+            { id: 1, name: "Isu-chan", img: "https://i.pinimg.com/736x/8a/d3/a9/8ad3a98ad3c3062093554b7348984920b77b.jpg", intro: "Hôm nay trời đẹp quá, cậu có muốn đi dạo cùng mình không?", hearts: 0, bio: "Ngọt ngào, hay thẹn thùng." }
         ];
-        let currentChar = null;
+        let activeID = null;
 
-        // Màn hình chờ
+        // KHỞI CHẠY SPLASH
+        const msgs = ["Kiểm tra độ đáng yêu...", "Đang nạp kẹo hồng...", "Hệ thống đã sẵn sàng!"];
+        let mIdx = 0;
+        const splashInterval = setInterval(() => {
+            document.getElementById('splash-msg').innerText = msgs[mIdx % msgs.length];
+            mIdx++;
+        }, 1000);
+
         setTimeout(() => {
-            document.getElementById('splash-screen').style.opacity = '0';
+            clearInterval(splashInterval);
+            document.getElementById('splash').style.opacity = '0';
             setTimeout(() => {
-                document.getElementById('splash-screen').style.display = 'none';
-                document.getElementById('app-container').style.display = 'flex';
-                confetti({ particleCount: 150, spread: 70, colors: ['#ffb6c1', '#ff69b4'] });
-                switchTab(1);
+                document.getElementById('splash').style.display = 'none';
+                document.getElementById('app').style.display = 'flex';
+                confetti({ particleCount: 150, spread: 70, colors: ['#ffb6c1', '#ff69b4'], origin: { y: 0.6 } });
+                changeTab(1);
             }, 500);
         }, 3000);
 
-        function switchTab(n) {
+        // ĐIỀU HƯỚNG TAB
+        function changeTab(n) {
             document.querySelectorAll('.nav-item').forEach((it, i) => it.classList.toggle('active', i+1 === n));
+            const view = document.getElementById('main-view');
             let html = "";
-            const box = document.getElementById('content');
-            
+
             if(n === 1) {
-                html = `<div style="padding:10px;"><h3>Nhân vật phổ biến</h3>`;
-                characters.forEach(c => {
+                html = `<div style="padding:15px;"><h3>Nhân vật mới nhất</h3>`;
+                charList.forEach(c => {
                     html += `
-                    <div class="char-card" onclick="openChat(${c.id})">
-                        <img src="${c.img}" class="char-avatar">
-                        <div style="margin-left:15px;">
-                            <strong>${c.name}</strong><br><small>${c.intro}</small>
-                        </div>
+                    <div class="char-card" onclick="startChat(${c.id})">
+                        <img src="${c.img}" class="char-img">
+                        <div><strong>${c.name}</strong><br><small style="color:#888;">${c.intro.substring(0,30)}...</small></div>
                     </div>`;
                 });
-                html += `</div><div class="add-char-btn">+</div>`;
+                html += `</div><div class="btn-add" onclick="openModal()">+</div>`;
             } else if(n === 5) {
                 html = `
-                <div class="profile-box">
-                    <div style="width:90px; height:90px; background:#ffd1dc; border-radius:50%; margin:0 auto; border:3px solid white;"></div>
-                    <h3>Người dùng mới</h3>
-                    <p>Kẹo hiện có: <span style="color:var(--pink-dark); font-weight:bold;">${kẹo} 🍬</span></p>
-                    <button style="background:var(--pink-dark); color:white; border:none; padding:10px 20px; border-radius:20px;" onclick="checkin()">Điểm danh nhận kẹo</button>
+                <div class="profile-card">
+                    <div style="width:100px; height:100px; background:#ffdce3; border-radius:50%; margin:0 auto; border:4px solid white;"></div>
+                    <h3 style="margin:10px 0 5px;">Người dùng Isu</h3>
+                    <div class="candy-box">${myCandy} 🍬</div><br>
+                    <button style="background:var(--dark); color:white; border:none; padding:10px 20px; border-radius:20px; font-weight:bold;" onclick="checkIn()">ĐIỂM DANH NHẬN KẸO</button>
                 </div>
-                <div style="padding:15px;">
-                    <h4>Nhiệm vụ hàng ngày</h4>
-                    <div class="mission-item"><span>Xem quảng cáo nhận kẹo</span><button class="btn-claim" onclick="watchAd()">Xem</button></div>
-                    <div class="mission-item"><span>Nạp 100 kẹo (20k VNG)</span><button class="btn-claim" onclick="alert('Chuyển hướng thanh toán...')">Nạp</button></div>
+                <div class="mission-box">
+                    <div class="mission-card"><div><strong>Xem quảng cáo</strong><br><small>Nhận 5 kẹo (Còn ${50-adCount}/50)</small></div><button class="btn-claim" onclick="doAd()">XEM</button></div>
+                    <div class="mission-card"><div><strong>Gói 100 kẹo</strong><br><small>Giá 20k VNG</small></div><button class="btn-claim" onclick="recharge(100)">NẠP</button></div>
+                    <div class="mission-card"><div><strong>Nhiệm vụ: Chat 1 lần</strong><br><small>Thưởng 50 kẹo</small></div><button class="btn-claim" onclick="alert('Đã nhận!')">NHẬN</button></div>
                 </div>`;
             } else {
-                html = `<div style="text-align:center; padding:50px; color:#aaa;">Tính năng Tab ${n} đang được hệ thống lập trình...</div>`;
+                html = `<div style="text-align:center; padding:100px 20px; color:#bbb;">Tính năng Tab ${n} đang được nâng cấp...</div>`;
             }
-            box.innerHTML = html;
+            view.innerHTML = html;
         }
 
-        function openChat(id) {
-            currentChar = characters.find(c => c.id === id);
-            document.getElementById('chat-ui').style.display = 'flex';
-            document.getElementById('target-name').innerText = currentChar.name;
-            updateHearts();
+        // LOGIC CHAT & THIỆN CẢM
+        function startChat(id) {
+            activeID = id;
+            let c = charList.find(x => x.id === id);
+            document.getElementById('chat-screen').style.display = 'flex';
+            document.getElementById('chat-name').innerText = c.name;
+            document.getElementById('msg-logs').innerHTML = `<div class="msg bot">${c.intro}</div>`;
+            refreshAff();
         }
 
-        function closeChat() { document.getElementById('chat-ui').style.display = 'none'; }
+        function exitChat() { document.getElementById('chat-screen').style.display = 'none'; }
 
-        function send() {
-            let input = document.getElementById('user-msg');
-            let txt = input.value.trim();
-            let cost = parseInt(document.getElementById('chat-level').value);
-            if(!txt) return;
-            if(kẹo < cost) { alert("Hết kẹo rồi ông giáo ơi!"); return; }
+        function doSend() {
+            let inp = document.getElementById('chat-input');
+            let val = inp.value.trim();
+            let cost = parseInt(document.getElementById('candy-tier').value);
+            if(!val) return;
+            if(myCandy < cost) { alert("Bạn cần thêm kẹo để chat tiếp!"); return; }
 
-            kẹo -= cost;
-            appendMsg('user', txt);
-            input.value = "";
+            myCandy -= cost;
+            addMsg('user', val);
+            inp.value = "";
 
+            let c = charList.find(x => x.id === activeID);
             let gain = Math.floor(Math.random() * 5) + 1;
-            currentChar.hearts += gain;
-            updateHearts();
+            c.hearts += gain;
+            refreshAff();
 
             setTimeout(() => {
-                appendMsg('bot', "Cảm ơn cậu nhé, tin nhắn của cậu ngọt như kẹo vậy! ✨");
-                if(gain >= 4) {
-                    document.getElementById('thought-space').innerHTML = `<div class="thought">Suy nghĩ: Hình như mình rất hợp với người này...</div>`;
+                let reply = "Mình cảm nhận được tâm ý của cậu rồi đó~";
+                if(cost >= 15) reply = "Cậu nói chuyện thật cuốn hút, mình muốn nghe thêm nữa được không? ✨";
+                addMsg('bot', reply);
+                if(gain >= 5) {
+                    document.getElementById('thought-area').innerHTML = `<div class="thought-bubble">Suy nghĩ của ${c.name}: Ước gì cuộc trò chuyện này không bao giờ kết thúc...</div>`;
+                    setTimeout(() => document.getElementById('thought-area').innerHTML = "", 3000);
                 }
             }, 1000);
         }
 
-        function appendMsg(who, txt) {
+        function addMsg(who, txt) {
             let log = document.getElementById('msg-logs');
-            log.innerHTML += `<div class="msg msg-${who}">${txt}</div>`;
+            log.innerHTML += `<div class="msg ${who}">${txt}</div>`;
             log.scrollTop = log.scrollHeight;
         }
 
-        function updateHearts() {
-            let h = currentChar.hearts;
-            let status = "Bình thường";
-            if(h >= 1000) status = "Kết hôn 💍";
-            else if(h >= 500) status = "Người yêu ❤️";
-            else if(h >= 100) status = "Thân thiết ✨";
-            document.getElementById('aff-txt').innerText = `Thiện cảm: ${h} (${status})`;
+        function refreshAff() {
+            let c = charList.find(x => x.id === activeID);
+            let h = c.hearts;
+            let st = "Bình thường";
+            if(h >= 1000) st = "Kết hôn 💍";
+            else if(h >= 500) st = "Người yêu ❤️";
+            else if(h >= 100) st = "Thân thiết ✨";
+            else if(h < 0) st = "Ghét 💢";
+            document.getElementById('aff-label').innerText = `Thiện cảm: ${h} (${st})`;
         }
 
-        function checkin() {
-            kẹo += 20;
+        function toggleExtra() {
+            let m = document.getElementById('extra-menu');
+            m.style.display = (m.style.display === 'grid') ? 'none' : 'grid';
+        }
+
+        function viewPhone() {
+            if(myCandy < 50) { alert("Cần 50 kẹo!"); return; }
+            myCandy -= 50;
+            alert("Đang truy cập điện thoại nhân vật... \n[Tin nhắn mới]: 'Hôm nay gặp cậu ấy vui quá!'");
+        }
+
+        function viewExtra(type) {
+            alert("Hệ thống: " + type + " đang tự động tổng hợp dựa trên lịch sử chat...");
+        }
+
+        // HỆ THỐNG PHỤ
+        function checkIn() {
+            myCandy += 20;
             confetti({ particleCount: 100, spread: 70, origin: { y: 0.8 } });
-            switchTab(5);
+            changeTab(5);
         }
 
-        function watchAd() {
-            alert("Đang xem quảng cáo 15s...");
-            setTimeout(() => { kẹo += 5; confetti(); switchTab(5); }, 2000);
+        function doAd() {
+            if(adCount >= 50) return;
+            alert("Quảng cáo đang chạy (15s)...");
+            setTimeout(() => {
+                adCount++;
+                myCandy += 5;
+                confetti({ colors:['#ffb6c1'] });
+                changeTab(5);
+            }, 2000);
+        }
+
+        function recharge(amt) {
+            alert("Đang kết nối cổng thanh toán Viettel/Ngân hàng...");
+            setTimeout(() => {
+                myCandy += amt;
+                document.body.classList.add('sparkle');
+                setTimeout(() => document.body.classList.remove('sparkle'), 2000);
+                changeTab(5);
+            }, 1500);
+        }
+
+        // MODAL TẠO NHÂN VẬT
+        function openModal() { document.getElementById('add-modal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('add-modal').style.display = 'none'; }
+        function saveNewChar() {
+            let n = document.getElementById('in-name').value;
+            if(!n) return;
+            charList.push({
+                id: Date.now(),
+                name: n,
+                img: document.getElementById('in-img').value || "https://via.placeholder.com/60",
+                intro: document.getElementById('in-first').value || "Chào cậu!",
+                hearts: 0,
+                bio: document.getElementById('in-bio').value
+            });
+            closeModal();
+            changeTab(1);
         }
     </script>
 </body>
 </html>
+
