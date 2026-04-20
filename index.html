@@ -304,27 +304,5 @@
 
     function showTool(name) { alert("Tính năng " + name + " đang được nhân vật xử lý..."); }
 </script>
-  let currentAvatarBase64 = null; // Biến này sẽ giữ dữ liệu ảnh để má lưu vào nhân vật
-                
-function handleImageSelect(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            // 1. Hiển thị ảnh lên khung tròn ngay lập tức
-            const preview = document.getElementById('avatar-preview');
-            preview.style.backgroundImage = `url('${e.target.result}')`;
-            preview.style.border = '2px solid #FF69B4'; // Đổi sang nét liền cho đẹp
-            document.getElementById('picker-text').style.display = 'none'; // Ẩn dấu cộng đi
-            
-            // 2. Lưu dữ liệu ảnh vào biến để tí nữa má dùng khi bấm nút "Lưu nhân vật"
-            currentAvatarBase64 = e.target.result;
-        };
-        
-        reader.readAsDataURL(input.files[0]); // Lệnh đọc file ảnh
-    }
-}
-    
-</body>
-</html>
-
+ </body>   
+ </html>
