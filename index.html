@@ -1,381 +1,264 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>Isu Chat Full</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isu Chat - Thế Giới Kẹo Ngọt</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        :root {
+            --pink-main: #FFC0CB;
+            --pink-dark: #FF69B4;
+            --bg-cream: #FFF5F7;
+        }
 
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:linear-gradient(to bottom,#fff,#ffd6ec);
-}
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--bg-cream);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-/* Loading */
-#loading{
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  color:hotpink;
-}
+        /* --- MÀN HÌNH CHỜ (SPLASH SCREEN) --- */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--pink-main);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
 
-/* Tabs */
-.tabs{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  display:flex;
-  background:pink;
-}
-.tabs button{
-  flex:1;
-  padding:12px;
-  border:none;
-  background:none;
-}
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 8px solid #FFF;
+            border-radius: 50%;
+            border-top: 8px solid var(--pink-dark);
+            animation: spin 1s linear infinite;
+        }
 
-/* Tab */
-.tab{padding:10px;}
-.hidden{display:none;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* Chat */
-#messages{
-  height:50vh;
-  overflow:auto;
-}
-.msg{margin:5px;}
-.user{text-align:right;}
-.bot{text-align:left;}
+        /* --- CẤU TRÚC APP --- */
+        #app {
+            display: none; /* Ẩn lúc đầu */
+            width: 100%;
+            max-width: 450px;
+            height: 100vh;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
 
-/* Avatar */
-.avatar{
-  width:30px;
-  border-radius:50%;
-  vertical-align:middle;
-}
+        /* Thanh trạng thái Tim */
+        .affinity-bar {
+            background: var(--pink-main);
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+        }
 
-/* Candy effect */
-.candy{
-  position:absolute;
-  width:10px;
-  height:10px;
-  background:pink;
-  border-radius:50%;
-  animation:explode 1s forwards;
-}
-@keyframes explode{
-  to{transform:scale(5) translateY(-50px);opacity:0;}
-}
+        /* Khu vực Chat */
+        #chat-window {
+            height: calc(100% - 150px);
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
-/* Side menu */
-#sideMenu{
-  position:fixed;
-  left:-200px;
-  top:0;
-  width:200px;
-  height:100%;
-  background:white;
-  transition:0.3s;
-}
-#sideMenu button{
-  width:100%;
-  padding:10px;
-  border:none;
-  background:#ffe6f2;
-}
-</style>
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .bot { background: var(--pink-main); align-self: flex-start; border-bottom-left-radius: 0; }
+        .user { background: #E0E0E0; align-self: flex-end; border-bottom-right-radius: 0; }
+
+        /* Bong bóng suy nghĩ */
+        .thought {
+            font-style: italic;
+            color: var(--pink-dark);
+            font-size: 12px;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
+        /* Thanh Tab Menu */
+        .tab-bar {
+            position: absolute;
+            bottom: 0; width: 100%;
+            height: 60px;
+            background: white;
+            border-top: 1px solid #EEE;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .tab-item { cursor: pointer; color: var(--pink-dark); font-weight: bold; }
+
+        /* Thanh Input & Candy Tier */
+        .input-area {
+            position: absolute;
+            bottom: 60px; width: 100%;
+            padding: 10px;
+            background: #FAFAFA;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--pink-main);
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .candy-button {
+            margin-left: 10px;
+            background: var(--pink-dark);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- Loading -->
-<div id="loading">
-  <h2>🍭 Đang kiểm tra hệ thống...</h2>
-  <p id="cuteText"></p>
-</div>
+    <div id="splash-screen">
+        <div class="loader"></div>
+        <h2 style="color: white; margin-top: 20px;">Isu Chat Checking...</h2>
+    </div>
 
-<div id="app" class="hidden">
+    <div id="app">
+        <div class="affinity-bar" id="status-display">Bình thường 🤍 (0 Tim)</div>
 
-<!-- Side menu -->
-<div id="sideMenu">
-<button onclick="showLog()">📖 Nhật kí</button>
-<button onclick="showNote()">📝 Ghi chú</button>
-</div>
+        <div id="chat-window">
+            <div class="message bot">Chào bạn! Isu đang đợi bạn mãi đó. Bạn có kẹo cho Isu không? ✨</div>
+        </div>
 
-<!-- Tabs -->
-<div class="tabs">
-<button onclick="openTab(1)">🏠</button>
-<button onclick="openTab(2)">💬</button>
-<button onclick="openTab(3)">📸</button>
-<button onclick="openTab(4)">👥</button>
-<button onclick="openTab(5)">👤</button>
-</div>
+        <div class="input-area">
+            <button class="candy-button" style="background: gray; margin-right: 5px;"><</button>
+            <input type="text" id="user-input" placeholder="Nhắn gì đó ngọt ngào...">
+            <button class="candy-button" onclick="handleSend()">Gửi (20🍬)</button>
+        </div>
 
-<!-- TAB 1: tạo nhân vật -->
-<div id="tab1" class="tab">
-<h3>Tạo nhân vật</h3>
+        <div class="tab-bar">
+            <div class="tab-item">Tab 1</div>
+            <div class="tab-item" style="text-decoration: underline;">Chat</div>
+            <div class="tab-item">Post</div>
+            <div class="tab-item">User</div>
+            <div class="tab-item" onclick="checkIn()">CheckIn</div>
+        </div>
+    </div>
 
-<input id="name" placeholder="Tên"><br>
-<input type="file" id="avatarFile"><br>
-<img id="preview" width="60"><br>
+    <script>
+        // --- LOGIC CORE ---
+        let candy = 100;
+        let hearts = 0;
 
-<input id="personality" placeholder="Tính cách"><br>
-<input id="style" placeholder="Phong cách nói"><br>
-<input id="firstMessage" placeholder="Câu đầu tiên"><br>
+        // 1. Splash Screen 3 giây
+        window.onload = () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.style.opacity = '0';
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                    document.getElementById('app').style.display = 'block';
+                    // Hiệu ứng kẹo nổ chào mừng
+                    candyExplosion();
+                }, 500);
+            }, 3000);
+        };
 
-<button onclick="createChar()">Tạo</button>
+        // 2. Hiệu ứng Kẹo nổ
+        function candyExplosion() {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#FFC0CB', '#FF69B4', '#FFFFFF']
+            });
+        }
 
-<div id="charList"></div>
-</div>
+        // 3. Xử lý Gửi tin nhắn (Logic mượt & sâu sắc)
+        async function handleSend() {
+            const input = document.getElementById('user-input');
+            const chatWin = document.getElementById('chat-window');
+            if (input.value.trim() === "") return;
 
-<!-- TAB 2: chat -->
-<div id="tab2" class="tab hidden">
-<button onclick="toggleMenu()">☰</button>
-<h3 id="chatName">Chưa chọn</h3>
-<p id="level">❤️ 0</p>
+            // Render tin nhắn User
+            renderMsg(input.value, 'user');
 
-<div id="messages"></div>
-<div id="thought"></div>
+            // Logic tính Tim (Giả lập AI chấm điểm)
+            let text = input.value.toLowerCase();
+            if (text.includes("thương") || text.includes("yêu")) {
+                updateHearts(5);
+                renderThought("Hành động của cậu ấy... làm mình bối rối quá...");
+            } else {
+                updateHearts(1);
+            }
 
-<input id="input">
-<button onclick="send()">Gửi</button>
-</div>
+            input.value = "";
+            candyExplosion(); // Kẹo nổ khi gửi
 
-<!-- TAB 3 -->
-<div id="tab3" class="tab hidden">
-<textarea id="post"></textarea>
-<button onclick="addPost()">Đăng</button>
-<div id="posts"></div>
-</div>
+            // Giả lập AI trả lời (Sâu sắc & Không lặp)
+            setTimeout(() => {
+                renderMsg("Cảm ơn cậu đã nhắn tin với Isu nha! Isu sẽ ghi nhớ điều này vào nhật ký. 🍬", 'bot');
+            }, 1000);
+        }
 
-<!-- TAB 4 -->
-<div id="tab4" class="tab hidden">
-<p>👥 Social demo</p>
-</div>
+        function renderMsg(text, sender) {
+            const chatWin = document.getElementById('chat-window');
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerText = text;
+            chatWin.appendChild(div);
+            chatWin.scrollTop = chatWin.scrollHeight;
+        }
 
-<!-- TAB 5 -->
-<div id="tab5" class="tab hidden">
-<p>🍬 Kẹo: <span id="candy">100</span></p>
-<p>🔥 Day: <span id="day">1</span>/7</p>
-<button onclick="daily()">Điểm danh</button>
+        function renderThought(text) {
+            const chatWin = document.getElementById('chat-window');
+            const div = document.createElement('div');
+            div.className = `thought`;
+            div.innerText = `💭 ${text}`;
+            chatWin.appendChild(div);
+        }
 
-<p>📺 Ads: <span id="ads">0</span>/50</p>
-<button onclick="watchAd()">Xem quảng cáo</button>
+        function updateHearts(amount) {
+            hearts += amount;
+            let status = "Bình thường 🤍";
+            if (hearts >= 10) status = "Thân thiết ✨";
+            if (hearts >= 100) status = "Người yêu ❤️";
+            document.getElementById('status-display').innerText = `${status} (${hearts} Tim)`;
+        }
 
-<button onclick="randomGift()">🎁 Quà random</button>
-</div>
-
-</div>
-
-<script>
-let chars=[];
-let current=null;
-let affection=0;
-let candy=100;
-let day=1;
-let ads=0;
-let avatarData="";
-let lastReplies=[];
-
-/* Loading */
-let texts=["Đợi xíu nhaaa~ 💖","Sắp xong rồi~","Đang yêu bạn 😳"];
-cuteText.innerText=texts[Math.floor(Math.random()*texts.length)];
-
-setTimeout(()=>{
-  loading.style.display="none";
-  app.classList.remove("hidden");
-  candyEffect();
-},3000);
-
-/* Tabs */
-function openTab(n){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.add("hidden"));
-  document.getElementById("tab"+n).classList.remove("hidden");
-}
-
-/* Candy effect */
-function candyEffect(){
-  for(let i=0;i<20;i++){
-    let c=document.createElement("div");
-    c.className="candy";
-    c.style.left=Math.random()*100+"%";
-    c.style.top="50%";
-    document.body.appendChild(c);
-    setTimeout(()=>c.remove(),1000);
-  }
-}
-
-/* Upload avatar */
-avatarFile.addEventListener("change",function(){
-  let file=this.files[0];
-  let reader=new FileReader();
-  reader.onload=e=>{
-    avatarData=e.target.result;
-    preview.src=avatarData;
-  };
-  reader.readAsDataURL(file);
-});
-
-/* Create char */
-function createChar(){
-  let char={
-    name:name.value,
-    avatar:avatarData,
-    personality:personality.value.toLowerCase(),
-    style:style.value,
-    first:firstMessage.value,
-    memory:[],
-    notes:[],
-    log:[],
-    mood:0
-  };
-
-  chars.push(char);
-
-  let d=document.createElement("div");
-  d.innerHTML=`<img src="${char.avatar}" width="30"> ${char.name}`;
-
-  d.onclick=()=>{
-    current=char;
-    chatName.innerText=char.name;
-    messages.innerHTML="";
-    affection=0;
-    addMsg(char.first || "…Xin chào.", "bot");
-  };
-
-  charList.appendChild(d);
-}
-
-/* Chat */
-function send(){
-  if(!current) return alert("Chọn nhân vật!");
-
-  let text=input.value;
-  addMsg(text,"user");
-
-  let reply=generateReply(text,current);
-  let heart=calcHeart(text);
-
-  setTimeout(()=>addMsg(reply,"bot"),500);
-
-  affection+=heart;
-  updateLevel();
-  updateThought();
-
-  current.log.push(text);
-  if(heart>=5) current.notes.push(text);
-
-  input.value="";
-}
-
-/* Reply thông minh */
-function generateReply(text,char){
-  let p=char.personality;
-  let reply="";
-
-  if(p.includes("lạnh")){
-    reply="Ừ.";
-  }else if(p.includes("tsundere")){
-    reply="Đừng hiểu lầm!";
-  }else{
-    reply="Tớ đang nghe.";
-  }
-
-  if(text.includes("yêu")) reply="Cậu làm tớ ngại đó 💖";
-  if(text.includes("ngu")) reply="…Tớ không thích vậy.";
-
-  // chống lặp
-  if(lastReplies.includes(reply)){
-    reply+=" …";
-  }
-
-  lastReplies.push(reply);
-  if(lastReplies.length>3) lastReplies.shift();
-
-  return reply;
-}
-
-/* Heart */
-function calcHeart(text){
-  if(text.includes("yêu")) return 5;
-  if(text.includes("ngu")) return -5;
-  return Math.floor(Math.random()*3)+1;
-}
-
-/* Level */
-function updateLevel(){
-  level.innerText="❤️ "+affection;
-}
-
-/* Thought */
-function updateThought(){
-  if(affection>50) thought.innerText="…Cậu đặc biệt thật.";
-  else if(affection<0) thought.innerText="…Khó chịu.";
-  else thought.innerText="…Bình thường.";
-}
-
-/* Message */
-function addMsg(text,type){
-  let m=document.createElement("div");
-  m.className="msg "+type;
-
-  if(type==="bot" && current.avatar){
-    m.innerHTML=`<img src="${current.avatar}" class="avatar"> ${text}`;
-  }else{
-    m.innerText=text;
-  }
-
-  messages.appendChild(m);
-}
-
-/* Menu */
-function toggleMenu(){
-  sideMenu.style.left = sideMenu.style.left==="0px"?"-200px":"0px";
-}
-function showLog(){
-  alert(current.log.join("\n"));
-}
-function showNote(){
-  alert(current.notes.join("\n"));
-}
-
-/* Post */
-function addPost(){
-  let d=document.createElement("div");
-  d.innerText=post.value;
-  posts.appendChild(d);
-}
-
-/* Candy */
-function daily(){
-  if(day<7){candy+=20;day++;}
-  else{candy+=100;day=1;}
-  updateCandy();
-  candyEffect();
-}
-function watchAd(){
-  if(ads>=50) return alert("Hết lượt!");
-  setTimeout(()=>{
-    candy+=5;
-    ads++;
-    updateCandy();
-    candyEffect();
-  },15000);
-}
-function randomGift(){
-  let r=Math.floor(Math.random()*50)+10;
-  candy+=r;
-  updateCandy();
-  alert("🎁 +"+r);
-}
-function updateCandy(){
-  document.getElementById("candy").innerText=candy;
-  document.getElementById("day").innerText=day;
-  document.getElementById("ads").innerText=ads;
-}
-</script>
-
+        // 4. Tab 5: Điểm danh
+        function checkIn() {
+            alert("Bạn nhận được 20 Kẹo điểm danh!");
+            candy += 20;
+            candyExplosion();
+        }
+    </script>
 </body>
 </html>
